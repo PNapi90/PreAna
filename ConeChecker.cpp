@@ -53,13 +53,6 @@ void ConeChecker::Check(const std::vector<double> &Etheta,
     //set rotation matrices for cone trafos
     SetMatrix(X);
     badCone = false;
-    /*for(auto x : X)
-    {
-        for(auto xi : x)
-            std::cout << xi << " ";
-        std::cout << std::endl;
-    }*/
-    //std::cout << Etheta[0] << std::endl;
 
     for(auto t : Etheta)
     {
@@ -211,11 +204,6 @@ void ConeChecker::SetPoint(const double al,
               h * cos(al) * cth * sphi * tan_t;
     VecX(2) = h * cth - h * cos(al) * sth * tan_t;
 
-    /*Eigen::Vector3d VecTmp(h*tan_t*cos(al),
-                           h*tan_t*sin(al),
-                           h);
-    Eigen::Vector3d VecRot = Matrix*VecTmp;
-    */
     for(int i = 0;i < 3;++i)
         VecX(i) += VecXOrig(i);// + VecRot(i);
     

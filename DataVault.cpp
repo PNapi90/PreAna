@@ -7,17 +7,17 @@ DataVault::DataVault(int _nThreads,
     : nThreads(_nThreads),
       maxBuffer(_processLen)
 {
-    DataBuffer = new GammaAna**[nThreads];
+    DataBuffer = new Tracked**[nThreads];
     for(int i = 0;i < nThreads;++i)
     {
-        DataBuffer[i] = new GammaAna*[maxBuffer];
+        DataBuffer[i] = new Tracked*[maxBuffer];
         for(int j = 0;j < maxBuffer;++j)
-            DataBuffer[i][j] = new GammaAna();
+            DataBuffer[i][j] = new Tracked();
     }
     Filled = std::vector<int>(nThreads,0);
 
     //-------------------------------------------
-    std::string dataName = "GBin_Raw.bin";//GBin_RawCs.bin";
+    std::string dataName = "TrackedBin.bin";//"GBin_Raw.bin";//GBin_RawCs.bin";
     //-------------------------------------------
     
     DATA.open(dataName,std::ios::in | std::ios::binary);
@@ -59,8 +59,8 @@ DataVault::~DataVault()
 
 void DataVault::LoadBuffer()
 {
-    //Temporary GammaAna Object for data input
-    GammaAna GTmp;
+    //Temporary Tracked Object for data input
+    Tracked GTmp;
 
     for(int i = 0;i < nThreads;++i)
         Filled[i] = 0;
@@ -72,17 +72,20 @@ void DataVault::LoadBuffer()
             if(DATA.good())
             {
                 DATA.read((char*)&GTmp,sizeof(GTmp));
-                
-                DataBuffer[i][j]->nPSA = GTmp.nPSA;
-                for(int k = 0;k < GTmp.nPSA;++k)
+
+                for(int k = 0;k < 2;++k)
                 {
-                    DataBuffer[i][j]->xPSA[k] = GTmp.xPSA[k];
-                    DataBuffer[i][j]->yPSA[k] = GTmp.yPSA[k];
-                    DataBuffer[i][j]->zPSA[k] = GTmp.zPSA[k];
-                    DataBuffer[i][j]->EPSA[k] = GTmp.EPSA[k];
+                    DataBuffer[i][j]->gammaX[k] = GTmp.gammaX[k];
+                    DataBuffer[i][j]->gammaY[k] = GTmp.gammaY[k];
+                    DataBuffer[i][j]->gammaZ[k] = GTmp.gammaZ[k];
+                    DataBuffer[i][j]->E[k] = GTmp.E[k];
                 }
                 for(int k = 0;k < 2;++k)
                     DataBuffer[i][j]->SourceXY[k] = GTmp.SourceXY[k];
+                DataBuffer[i][j]->dE_Lycca = GTmp.dE_Lycca;
+                DataBuffer[i][j]->E_Lycca = GTmp.E_Lycca;
+                DataBuffer[i][j]->mult_Lycca = GTmp.mult_Lycca;
+                
                 ++Filled[i];
             }
             else
@@ -126,7 +129,7 @@ int DataVault::GetEventAmount(int thrNumber)
 
 void DataVault::GetEvent(int thrNumber,
                          int EventNumber,
-                         GammaAna &GTmp)
+                         Tracked &GTmp)
 {
     if(EventNumber >= Filled[thrNumber])
     {
@@ -143,17 +146,19 @@ void DataVault::GetEvent(int thrNumber,
         std::cerr << e.what() << '\n';
     }
     
-    GTmp.nPSA = DataBuffer[thrNumber][EventNumber]->nPSA;
-
-    for (int k = 0; k < GTmp.nPSA; ++k)
+    for (int k = 0; k < 2; ++k)
     {
-        GTmp.xPSA[k] = DataBuffer[thrNumber][EventNumber]->xPSA[k];
-        GTmp.yPSA[k] = DataBuffer[thrNumber][EventNumber]->yPSA[k];
-        GTmp.zPSA[k] = DataBuffer[thrNumber][EventNumber]->zPSA[k];
-        GTmp.EPSA[k] = DataBuffer[thrNumber][EventNumber]->EPSA[k];
+        GTmp.gammaX[k] = DataBuffer[thrNumber][EventNumber]->gammaX[k];
+        GTmp.gammaY[k] = DataBuffer[thrNumber][EventNumber]->gammaY[k];
+        GTmp.gammaZ[k] = DataBuffer[thrNumber][EventNumber]->gammaZ[k];
+        GTmp.E[k] = DataBuffer[thrNumber][EventNumber]->E[k];
     }
     for (int k = 0; k < 2; ++k)
         GTmp.SourceXY[k] = DataBuffer[thrNumber][EventNumber]->SourceXY[k];
+
+    GTmp.dE_Lycca = DataBuffer[thrNumber][EventNumber]->dE_Lycca;
+    GTmp.E_Lycca = DataBuffer[thrNumber][EventNumber]->E_Lycca;
+    GTmp.dE_Lycca = DataBuffer[thrNumber][EventNumber]->mult_Lycca;
 } 
 
 //------------------------------------------

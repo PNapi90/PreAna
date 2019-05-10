@@ -8,6 +8,8 @@
 #include <vector>
 #include <memory>
 
+#include "TrackStruct.hpp"
+
 struct GammaAna
 {
     int nPSA;
@@ -42,7 +44,7 @@ class DataVault
 
     std::ifstream DATA;
     std::vector<int> Filled;
-    GammaAna ***DataBuffer;
+    Tracked ***DataBuffer;
 
     void CheckBadAccess(int thrNumber,
                         int EventNumber);
@@ -62,7 +64,7 @@ class DataVault
     int GetEventAmount(int thrNumber);
     void GetEvent(int thrNumber,
                   int EventNumber,
-                  GammaAna &GTmp);
+                  Tracked &GTmp);
 };
 
 #endif

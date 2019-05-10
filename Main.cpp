@@ -40,16 +40,12 @@ int main(int argc,char** argv)
     std::cout << "BufferLen = " << Flag.BufferLen << std::endl;
     std::cout << "------------" << std::endl;
 
-    std::ofstream AsymmetryFile("Asyms.File");
-
     std::vector<std::shared_ptr<Analyzer>> Analyzers;
     Analyzers.reserve(Flag.nThr);
     for(int i = 0;i < Flag.nThr;++i)
         Analyzers.push_back(std::make_shared<Analyzer>(i,&DATA,Flag.Egamma,Flag.BufferLen));
 
     int RoundCount = 0;
-
-    std::vector<std::vector<double>> Asyms(Flag.BufferLen,std::vector<double>(6,0));
 
     int MAXTURNS = Flag.turns;
 
@@ -64,17 +60,6 @@ int main(int argc,char** argv)
         for (int i = 0; i < nFilled; ++i)
             t[i].join();
 
-        for(int i = 0;i < nFilled*0;++i)
-        {
-            Analyzers[i]->GetAsymmetries(Asyms);
-            for(auto A : Asyms)
-            {
-                for(auto Ai : A)
-                    AsymmetryFile << Ai << " ";
-                AsymmetryFile << std::endl;
-            }
-
-        }
 
         std::cout << "\t\t\t\t\t\t\r";
         std::cout << "Turn # " << RoundCount << " done";
@@ -82,14 +67,16 @@ int main(int argc,char** argv)
         
         ++RoundCount;
     }
-    AsymmetryFile.close();
+    std::cout << "\nDeleting Analyzers... ";
+    std::cout.flush();
+    for (int i = 0; i < Flag.nThr; ++i)
+        Analyzers.pop_back();
+    std::cout << "done" << std::endl;
 
     std::cout << "\n\nData fully processed" << std::endl;
     std::cout << "----------------------" << std::endl;
 
     
-    for(int i = 0;i < Flag.nThr;++i)
-        Analyzers.pop_back();
 
     return 0;
 }

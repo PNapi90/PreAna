@@ -13,10 +13,7 @@ Analyzer::Analyzer(const int _thrNumber,
       AmountOfEvents(0),
       Eg(_Eg),
       MAX_ASYM(_processLen)
-{
-    Asymmetries = std::vector<std::vector<double>>(MAX_ASYM,
-                  std::vector<double>(6,0));
-}
+{}
 
 //------------------------------------------
 
@@ -30,22 +27,16 @@ Analyzer::~Analyzer()
 void Analyzer::Process()
 {
     AmountOfEvents = Data->GetEventAmount(thrNumber);
-    GammaAna GammaTmp;
+    Tracked TrackTmp;
 
     int nProcessed = 0;
 
     for(int i = 0;i < AmountOfEvents;++i)
     {
-        Data->GetEvent(thrNumber,i,GammaTmp);
+        Data->GetEvent(thrNumber, i, TrackTmp);
 
-        if(!Gate(GammaTmp))
-        {
-            Asymmetries[i][0] = -100;
-            Asymmetries[i][1] = 0;
-            continue;
-        }
         //Starting analysis
-        GammaAnalysis(GammaTmp);
+        GammaAnalysis(TrackTmp);
 
         ++nProcessed;
         if(!thrNumber && nProcessed % 1000 == 0)
@@ -62,98 +53,63 @@ std::thread Analyzer::ANALYZE()
 
 //------------------------------------------
 
-void Analyzer::GetAsymmetries(std::vector<std::vector<double>> &Asymmetries)
-{
-    for(int i = 0;i < AmountOfEvents;++i)
-    {
-        for(int j = 0;j < 6;++j)
-            Asymmetries[i][j] = this->Asymmetries[i][j];
-    }
-} 
-
-//------------------------------------------
-
-inline bool Analyzer::Gate(GammaAna &G)
+inline bool Analyzer::Gate(const Tracked &T)
 {
     double Esum = 0;
-    double dist = pow(G.xPSA[0] - G.xPSA[1],2) + 
-                   pow(G.yPSA[0] - G.yPSA[1],2) +
-                   pow(G.zPSA[0] - G.zPSA[1],2);
-    for(int i = 0;i < G.nPSA;++i)
-    {
-        Esum += G.EPSA[i];
-    }
+    double dist = pow(T.gammaX[0] - T.gammaX[1], 2) +
+                  pow(T.gammaY[0] - T.gammaY[1], 2) +
+                  pow(T.gammaZ[0] - T.gammaZ[1], 2);
+    
+    Esum = T.E[1];
     dist = sqrt(dist);
     
-    return ((G.nPSA == 2 && G.nPSA > 1) && std::abs(Esum - Eg) <= 3 && dist >= 10);// && std::abs(G.EPSA[0] - Eg/2.) <= 10);
+    return (std::abs(Esum - Eg) <= 3 && dist >= 10);// && std::abs(G.EPSA[0] - Eg/2.) <= 10);
 } 
 
 //------------------------------------------
 
-void Analyzer::GammaAnalysis(const GammaAna &Gamma)
+void Analyzer::GammaAnalysis(Tracked &Track)
 {
-    const int Hits = Gamma.nPSA;
-    std::vector<int> SortArray(Hits,0);
-    for(int i = 0;i < Hits;++i)
-        SortArray[i] = i;
 
     double sigmaTheta = 0;
     double Theta = 0;
-    //old vector for higher performance
-    std::vector<int> Old(2,0);
+
     bool processed = false;
 
     int nbins = 0;
 
     std::vector<double> Edep(2,0);
     std::vector<std::vector<double>> X(2,std::vector<double>(3,0));
-    bool firstLoop = true;
-    //loop over all permutations
-    do
+
+    for(int i = 0;i < 2;++i)
     {
-        if(!firstLoop)
-            continue;
-        else
-            firstLoop = false;
-        //Check if already processed
-        processed = (Old[0] == SortArray[0])
-                    && (Old[1] == SortArray[1]);
-        for(int i = 0;i < 2;++i)
-            Old[i] = SortArray[i];
+        Edep[i] = Track.E[i];
+        X[i][0] = Track.gammaX[i];
+        X[i][1] = Track.gammaY[i];
+        X[i][2] = Track.gammaZ[i];
+    }
 
-        if(processed)
-            continue;
-        for(int i = 0;i < 2;++i)
-        {
-            Edep[i] = Gamma.EPSA[SortArray[i]];
-            X[i][0] = Gamma.xPSA[SortArray[i]];
-            X[i][1] = Gamma.yPSA[SortArray[i]];
-            X[i][2] = Gamma.zPSA[SortArray[i]];
-        }
-        
-        Theta = GetThetaE(Edep[0]);
-        
-        //check if scattering possible
-        if(Theta == WRONG_CASE)
-            continue;
-        
-        sigmaTheta = Tracker.GetUncertainty(Edep,X);
-        bool checkZeroDegree = (Theta - sigmaTheta) < 0;
+    if(!Gate(Track))
+        return;
 
-        nbins = (checkZeroDegree) ? (sigmaTheta+Theta)/binWidth : 2*sigmaTheta/binWidth;
-
-        std::vector<double> ETheta(2,Theta);
-        //std::vector<double> ETheta(nbins,Theta - sigmaTheta);
-        //std::cout << "_----------------_\n" << Theta << " " << sigmaTheta << "\n----" << std::endl;
-        //for(int i = 0;i < nbins;++i)
-        //    ETheta[i] += i*(2*sigmaTheta)/nbins;
-        
-        //Check cone intersections with
-        //both target planes
-        CONE.Check(ETheta,X,sigmaTheta/Theta);
-
-    } while (std::next_permutation(SortArray.begin(),SortArray.end()));
+    Theta = GetThetaE(Edep[0]);
     
+    //check if scattering possible
+    if(Theta == WRONG_CASE)
+        return;
+
+    sigmaTheta = Tracker.GetUncertainty(Edep,X);
+    bool checkZeroDegree = (Theta - sigmaTheta) < 0;
+    nbins = (checkZeroDegree) ? (sigmaTheta+Theta)/binWidth : 2*sigmaTheta/binWidth;
+    std::vector<double> ETheta(2,Theta);
+    //std::vector<double> ETheta(nbins,Theta - sigmaTheta);
+    //std::cout << "_----------------_\n" << Theta << " " << sigmaTheta << "\n----" << std::endl;
+    //for(int i = 0;i < nbins;++i)
+    //    ETheta[i] += i*(2*sigmaTheta)/nbins;
+    
+    //Check cone intersections with
+    //both target planes
+    CONE.Check(ETheta,X,sigmaTheta/Theta);
 }
 
 //------------------------------------------

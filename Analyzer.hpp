@@ -10,6 +10,8 @@
 #include "GammaTracker.hpp"
 #include "ConeChecker.hpp"
 
+#include "TrackStruct.hpp"
+
 class Analyzer
 {
 private:
@@ -18,7 +20,6 @@ private:
 
     GammaTracker Tracker;
     ConeChecker CONE;
-
     
     const double mc2 = 511;
     const double WRONG_CASE = -9999;
@@ -28,16 +29,14 @@ private:
     int MAX_ASYM;
     double Eg;
 
-    
-    std::vector<std::vector<double>> Asymmetries;
 
     int thrNumber;
 
     void Process();
 
-    void GammaAnalysis(const GammaAna &G);
+    void GammaAnalysis(Tracked &T);
 
-    inline bool Gate(GammaAna &G);
+    inline bool Gate(const Tracked &T);
     inline double GetThetaE(const double E) const;
 
 public:
@@ -48,8 +47,6 @@ public:
     ~Analyzer();
 
     std::thread ANALYZE();
-
-    void GetAsymmetries(std::vector<std::vector<double>> &Asymmetries);
 };
 
 

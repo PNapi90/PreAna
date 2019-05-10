@@ -1,0 +1,15 @@
+*.o
+*.bin
+*.dat
+*.pdf
+*.out
+
+*.File
+
+.vscode/*
+.vscode
+
+Analysis
+__pycache__
+
+Histograms/*

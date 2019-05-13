@@ -12,10 +12,11 @@
 struct FlagsAndValues
 {
     int nThr = 1;
-    int turns = 100;
-    double Egamma = 661.7;//.;//547.5;
+    int turns = 100000;
+    double Egamma = 547.5;
     int BufferLen = 1000;
     bool help = false;
+    int mid = 0;
 };
 
 //-------------------------------------
@@ -45,7 +46,7 @@ int main(int argc,char** argv)
     std::vector<std::shared_ptr<Analyzer>> Analyzers;
     Analyzers.reserve(Flag.nThr);
     for(int i = 0;i < Flag.nThr;++i)
-        Analyzers.push_back(std::make_shared<Analyzer>(i,&DATA,Flag.Egamma,Flag.BufferLen));
+        Analyzers.push_back(std::make_shared<Analyzer>(i,&DATA,Flag.Egamma,Flag.BufferLen,Flag.mid));
 
     int RoundCount = 0;
 
@@ -92,7 +93,7 @@ void GetFlags(int argc,
 
     std::string s;
     bool threads = false,turnFlag = false,bufferFlag = false;
-    bool EgFlag = false;
+    bool EgFlag = false,back = false;
 
     for(int i = 0;i < argc;++i)
     {
@@ -146,6 +147,17 @@ void GetFlags(int argc,
             F.help = true;
             continue;
         }
+        if(s == "-m")
+        {
+            back = true;
+            continue;
+        }
+        if(back)
+        {
+            F.mid = std::stoi(s);
+            back = false;
+            continue;
+        }
     }
 }
 
@@ -172,6 +184,7 @@ void PrintFlags(const FlagsAndValues &F)
         std::cout << "\t -turns n\t set n as number of processed turns" << std::endl;
         std::cout << "\t -Eg n\t\t set n as processed photon energy" << std::endl;
         std::cout << "\t -b n\t\t set n as buffer len (len of turn)" << std::endl;
+        std::cout << "\t -m n\t\t set n as background (-1,1) or peak (0) gate" << std::endl;
         std::cout << "\t -h  \t\t print this message\n" << std::endl;
     }
 }

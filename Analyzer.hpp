@@ -27,6 +27,7 @@ private:
 
     int AmountOfEvents;
     int MAX_ASYM;
+    int mid;
     double Eg;
 
 
@@ -43,7 +44,8 @@ public:
     Analyzer(const int _thrNumber,
              DataVault *_Data,
              const double _Eg,
-             const int _processLen);
+             const int _processLen,
+             const int _mid);
     ~Analyzer();
 
     std::thread ANALYZE();

@@ -5,14 +5,16 @@
 Analyzer::Analyzer(const int _thrNumber,
                    DataVault *_Data,
                    const double _Eg,
-                   const int _processLen)
+                   const int _processLen,
+                   const int _mid)
     : thrNumber(_thrNumber),
       CONE(_thrNumber),
       Data(_Data),
       Tracker(_Eg),
       AmountOfEvents(0),
       Eg(_Eg),
-      MAX_ASYM(_processLen)
+      MAX_ASYM(_processLen),
+      mid(_mid)
 {}
 
 //------------------------------------------
@@ -63,7 +65,23 @@ inline bool Analyzer::Gate(const Tracked &T)
     Esum = T.E[1];
     dist = sqrt(dist);
     
-    return dist >= 10;// && std::abs(G.EPSA[0] - Eg/2.) <= 10);
+    bool generalCondition = dist >= 10 && std::abs(T.E[0] - T.E[1]/2.) <= 50;
+
+    if(T.gammaX[1] == 0)
+        std::cout << "Not nice" << std::endl;
+    
+    //left from peak
+    if(mid == -1)
+        return Esum >= 535 && Esum <= 541 && generalCondition;
+    
+    //right from peak
+    else if(mid == 1)
+        return Esum >= 550 && Esum <= 556 && generalCondition;
+    
+    //peak
+    else
+        return Esum >= 543 && Esum <= 549 && generalCondition;
+    //return std::abs(Eg - Esum) <= 10 && dist >= 10;// && std::abs(G.EPSA[0] - Eg/2.) <= 10);
 } 
 
 //------------------------------------------
@@ -109,7 +127,15 @@ void Analyzer::GammaAnalysis(Tracked &Track)
     
     //Check cone intersections with
     //both target planes
-    CONE.Check(ETheta,X,sigmaTheta/Theta);
+    
+    if(Track.mult_Lycca >= 0)
+    {
+        double r = 0;
+        for(int i = 0;i < 2;++i)
+            r += pow(Track.SourceXY[i],2);
+        r = sqrt(r);
+        CONE.Check(ETheta,X,sigmaTheta/Theta,r);
+    }
 }
 
 //------------------------------------------

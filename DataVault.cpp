@@ -17,7 +17,7 @@ DataVault::DataVault(int _nThreads,
     Filled = std::vector<int>(nThreads,0);
 
     //-------------------------------------------
-    std::string dataName = "TrackedBin.bin";//"GBin_Raw.bin";//GBin_RawCs.bin";
+    std::string dataName = "Tracked.bin";//"GBin_Raw.bin";//GBin_RawCs.bin";
     //-------------------------------------------
     
     DATA.open(dataName,std::ios::in | std::ios::binary);
@@ -90,7 +90,7 @@ void DataVault::LoadBuffer()
             }
             else
             {
-                std::cout << "-----------------------" << std::endl;
+                std::cout << "\n-----------------------" << std::endl;
                 std::cout << "End of File reached" << std::endl;
                 std::cout << "-----------------------" << std::endl;
                 EOF_Reached = true;

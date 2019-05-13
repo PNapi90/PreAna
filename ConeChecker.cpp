@@ -16,7 +16,8 @@ ConeChecker::ConeChecker(const int _fileNum)
       fileNum(_fileNum),
       acosAngle(0),
       TargetOffset(200),
-      nPlanes(40)
+      nPlanes(40),
+      RValNorm(0)
 {
 
 
@@ -34,6 +35,8 @@ ConeChecker::ConeChecker(const int _fileNum)
     for(int i = 0;i < nPlanes;++i)
         Target[i] = -200. + i*400./((double)nPlanes);
     
+    RVals = std::vector<double>(nPlanes,0);
+    RVAL_File.open("Histograms/RVals_" + std::to_string(fileNum));
 }
 
 //------------------------------------------
@@ -41,6 +44,7 @@ ConeChecker::ConeChecker(const int _fileNum)
 ConeChecker::~ConeChecker()
 {
     WriteHistograms();
+    RVAL_File.close();
 }
 
 //------------------------------------------
@@ -48,12 +52,16 @@ ConeChecker::~ConeChecker()
 
 void ConeChecker::Check(const std::vector<double> &Etheta,
                         const std::vector<std::vector<double>> &X,
-                        const double Relative)
+                        const double Relative,
+                        const double rLycca)
 {
     //set rotation matrices for cone trafos
     SetMatrix(X);
+    this->rLycca = rLycca;
     badCone = false;
-
+    bool first = true;
+    RValNorm = 0;
+    rOld = 0;
     for(auto t : Etheta)
     {
         //set denominator limits for cone angle alpha
@@ -83,7 +91,11 @@ void ConeChecker::Check(const std::vector<double> &Etheta,
             
 
         }
+        if(first)
+            WriteRVals();
+        first = false;
     }
+
 }
 
 //------------------------------------------
@@ -227,6 +239,9 @@ void ConeChecker::IncrementHistogram(const int TargetID)
     int XBin = GetBin(VecX(0));
     int YBin = GetBin(VecX(1));
 
+    //get derivative in target
+    TargetDerivative(TargetID);
+
     
 
     //Check if z coordinate == Target position
@@ -271,6 +286,38 @@ void ConeChecker::WriteHistograms() const
         }
         DATA.close();
         DATA.clear();
+    }
+}
+
+//------------------------------------------
+
+void ConeChecker::TargetDerivative(const int TargetID)
+{
+    double r = 0;
+    for(int i = 0;i < 3;++i)
+        r += VecX(i)*VecX(i);
+    r = sqrt(r);
+
+    double delta = 0;
+    if(TargetID > 0)
+        delta = r - rOld;
+
+    
+    RVals[TargetID] = TargetID > 0 ? r/rLycca : 0;
+    rOld = r;
+
+    RValNorm += delta;
+}
+
+//------------------------------------------
+
+void ConeChecker::WriteRVals()
+{
+    if(RValNorm != 0)
+    {
+        for(auto V : RVals)
+            RVAL_File << V << " ";
+        RVAL_File << std::endl;
     }
 }
 

@@ -30,6 +30,9 @@ private:
     std::vector<double> Target;
 
     double cth,sth,cphi,sphi;
+    double rOld;
+
+    double RValNorm;
 
     int EThetaBins,fileNum,nPlanes;
 
@@ -39,6 +42,9 @@ private:
     Eigen::Vector3d VecX,VecXOrig;
 
     double a,b,c;
+    double rLycca;
+    std::vector<double> RVals;
+    std::ofstream RVAL_File;
 
     std::vector<std::vector<std::vector<double>>> Histograms;
 
@@ -50,8 +56,9 @@ private:
                   const int targetID);
 
     void IncrementHistogram(const int TargetID);
-
     void WriteHistograms() const;
+    void TargetDerivative(const int TargetID);
+    void WriteRVals() ;
 
     inline int GetBin(const double value) const;
     inline double ConeHeight(const int targetID,
@@ -67,7 +74,8 @@ public:
 
     void Check(const std::vector<double> &Etheta,
                const std::vector<std::vector<double>> &X,
-               const double Relative);
+               const double Relative,
+               const double rLycca);
 };
 
 

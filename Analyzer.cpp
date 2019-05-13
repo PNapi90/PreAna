@@ -39,8 +39,8 @@ void Analyzer::Process()
         GammaAnalysis(TrackTmp);
 
         ++nProcessed;
-        if(!thrNumber && nProcessed % 1000 == 0)
-            std::cout << "Events processed -> " << nProcessed << " of " << AmountOfEvents << std::endl;
+        //if(!thrNumber && nProcessed % 1000 == 0)
+        //    std::cout << "Events processed -> " << nProcessed << " of " << AmountOfEvents << std::endl;
     }
 }
 
@@ -63,7 +63,7 @@ inline bool Analyzer::Gate(const Tracked &T)
     Esum = T.E[1];
     dist = sqrt(dist);
     
-    return (std::abs(Esum - Eg) <= 3 && dist >= 10);// && std::abs(G.EPSA[0] - Eg/2.) <= 10);
+    return dist >= 10;// && std::abs(G.EPSA[0] - Eg/2.) <= 10);
 } 
 
 //------------------------------------------

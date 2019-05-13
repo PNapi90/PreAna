@@ -15,6 +15,7 @@ struct FlagsAndValues
     int turns = 100;
     double Egamma = 661.7;//.;//547.5;
     int BufferLen = 1000;
+    bool help = false;
 };
 
 //-------------------------------------
@@ -22,6 +23,8 @@ struct FlagsAndValues
 void GetFlags(int argc,
               char** argv,
               FlagsAndValues &F);
+
+void PrintFlags(const FlagsAndValues &F);
 
 
 //=====================================
@@ -31,14 +34,13 @@ int main(int argc,char** argv)
     FlagsAndValues Flag;
 
     GetFlags(argc,argv,Flag);
+    PrintFlags(Flag);
+
+    if(Flag.help)
+        return 0;
+
     DataVault DATA(Flag.nThr,Flag.BufferLen);
 
-    std::cout << "----------------------" << std::endl;
-    std::cout << "Eg = " << Flag.Egamma << std::endl;
-    std::cout << "Turns = " << Flag.turns << std::endl;
-    std::cout << "Threads = " << Flag.nThr << std::endl;
-    std::cout << "BufferLen = " << Flag.BufferLen << std::endl;
-    std::cout << "------------" << std::endl;
 
     std::vector<std::shared_ptr<Analyzer>> Analyzers;
     Analyzers.reserve(Flag.nThr);
@@ -139,7 +141,37 @@ void GetFlags(int argc,
             EgFlag = false;
             continue;
         }
+        if(s == "-h")
+        {
+            F.help = true;
+            continue;
+        }
     }
 }
 
 //-------------------------------------
+
+void PrintFlags(const FlagsAndValues &F)
+{
+    if(!F.help)
+    {
+        std::cout << "\n=========================\n";
+        std::cout << "Welcome to PreAna" << std::endl;
+        std::cout << "- - - - - - - - -" << std::endl;
+        std::cout << "Egamma = " << F.Egamma << std::endl;
+        std::cout << "Threads = " << F.nThr << std::endl;
+        std::cout << "Buffer Len = " << F.BufferLen << std::endl;
+        std::cout << "Turns = " << F.turns << std::endl;
+        std::cout << "- - - - - - - - -" << std::endl;
+    }
+    else
+    {
+        std::cout << "\nHelp of PreAna\n" << std::endl;
+        std::cout << "Possible flags:\n";
+        std::cout << "\t -t n\t\t set n as number of threads" << std::endl;
+        std::cout << "\t -turns n\t set n as number of processed turns" << std::endl;
+        std::cout << "\t -Eg n\t\t set n as processed photon energy" << std::endl;
+        std::cout << "\t -b n\t\t set n as buffer len (len of turn)" << std::endl;
+        std::cout << "\t -h  \t\t print this message\n" << std::endl;
+    }
+}

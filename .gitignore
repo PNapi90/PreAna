@@ -12,4 +12,5 @@
 Analysis
 __pycache__
 
-Histograms/*
+Histograms/File*
+Histograms/data*

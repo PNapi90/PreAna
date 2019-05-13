@@ -73,6 +73,9 @@ void ConeChecker::Check(const std::vector<double> &Etheta,
                 //target reference frame
                 SetPoint(al,i);
 
+                //Write Events that intersect with target
+                
+
                 //increment intersection point on histogram
                 if(!badCone && Relative < 0.1)
                     IncrementHistogram(i);
